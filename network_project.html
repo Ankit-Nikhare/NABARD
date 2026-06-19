@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICAR Institutes — Location Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --board: #1B3A2E;
+            --board-deep: #102019;
+            --chalk: #F2EEDD;
+            --chalk-dim: rgba(242, 238, 221, 0.62);
+            --chalk-yellow: #E8C44D;
+            --paper: #F7F1DE;
+            --paper-line: #DCCFA9;
+            --ink: #211D14;
+            --ink-soft: rgba(33, 29, 20, 0.62);
+            --red-pen: #B6262C;
+            --red-pen-wash: rgba(182, 38, 44, 0.10);
+            --green-ok: #3E6B3A;
+            --green-ok-wash: rgba(62, 107, 58, 0.12);
+            --radius: 14px;
+            --serif-display: 'Caveat', cursive;
+            --sans: 'IBM Plex Sans', sans-serif;
+            --mono: 'IBM Plex Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            background: var(--board);
+            color: var(--chalk);
+            font-family: var(--sans);
+        }
+
+        body {
+            position: relative;
+            background-image: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.05), transparent 55%), radial-gradient(ellipse at 90% 100%, rgba(0, 0, 0, 0.25), transparent 60%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.05;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .wrap {
+            position: relative;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: clamp(20px, 5vw, 40px) clamp(16px, 5vw, 28px) 64px;
+        }
+
+        .brand {
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--chalk-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: clamp(18px, 6vw, 34px);
+        }
+
+        .brand .mark {
+            color: var(--chalk-yellow);
+        }
+
+        .hero {
+            margin-bottom: clamp(20px, 6vw, 34px);
+        }
+
+        .hero h1 {
+            font-family: var(--serif-display);
+            font-weight: 700;
+            font-size: clamp(38px, 10vw, 54px);
+            line-height: 0.95;
+            margin: 0 0 6px;
+            color: var(--chalk);
+        }
+
+        .hero svg.underline {
+            display: block;
+            width: min(220px, 60%);
+            height: 14px;
+            margin-bottom: 14px;
+        }
+
+        .hero p {
+            font-size: clamp(14px, 3.6vw, 16px);
+            color: var(--chalk-dim);
+            margin: 0;
+            max-width: 48ch;
+        }
+
+        .card {
+            position: relative;
+            background: var(--paper);
+            color: var(--ink);
+            border-radius: var(--radius);
+            padding: clamp(18px, 5vw, 26px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35), 0 2px 0 rgba(0, 0, 0, 0.08) inset;
+            transform: rotate(-0.6deg);
+        }
+
+        .card.flat {
+            transform: none;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #f2f2f2, #9a9a9a 70%, #707070);
+            box-shadow: 0 3px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        #setup-screen label {
+            display: block;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 8px;
+        }
+
+        .dataset-note {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--ink-soft);
+            margin: 0 0 18px;
+        }
+
+        .control {
+            margin-bottom: 6px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 22px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: repeating-linear-gradient(90deg, var(--ink-soft) 0 6px, transparent 6px 11px);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px 4px 8px 4px;
+            background: var(--chalk-yellow);
+            margin-top: -7px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type=range]::-moz-range-track {
+            height: 4px;
+            background: repeating-linear-gradient(90deg, var(--ink-soft) 0 6px, transparent 6px 11px);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 4px 4px 8px 4px;
+            background: var(--chalk-yellow);
+        }
+
+        .control .value {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--ink);
+            margin-top: 6px;
+        }
+
+        .btn {
+            font-family: var(--mono);
+            font-size: 13px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border: 1.5px dashed var(--chalk-yellow);
+            background: transparent;
+            color: var(--chalk);
+            padding: 13px 22px;
+            border-radius: 9px;
+            cursor: pointer;
+            min-height: 46px;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+
+        .btn:hover {
+            background: rgba(232, 196, 77, 0.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn:focus-visible {
+            outline: 3px solid var(--chalk-yellow);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            margin-top: 22px;
+            background: var(--chalk-yellow);
+            color: var(--board-deep);
+            border-style: solid;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: #f0d268;
+        }
+
+        .btn-ghost {
+            border-color: var(--chalk-dim);
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 22px;
+            flex-wrap: wrap;
+        }
+
+        .actions-row .btn {
+            flex: 1 1 160px;
+        }
+
+        #quiz-screen,
+        #results-screen {
+            display: none;
+        }
+
+        .quiz-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            color: var(--chalk-dim);
+            margin-bottom: 14px;
+        }
+
+        .tally {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .question-eyebrow {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 0 0 6px;
+        }
+
+        .question-text {
+            font-size: clamp(18px, 4.8vw, 21px);
+            line-height: 1.4;
+            margin: 0 0 18px;
+            font-weight: 600;
+        }
+
+        .question-text .abbr {
+            font-family: var(--mono);
+            font-weight: 500;
+            color: var(--ink-soft);
+            font-size: 0.7em;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .option {
+            position: relative;
+            text-align: left;
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: rgba(33, 29, 20, 0.03);
+            border: 1.5px solid rgba(33, 29, 20, 0.18);
+            border-radius: 9px;
+            padding: 12px 40px 12px 14px;
+            font-family: var(--sans);
+            font-size: 15px;
+            color: var(--ink);
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .option:hover:not(:disabled) {
+            border-color: var(--ink);
+            background: rgba(33, 29, 20, 0.06);
+        }
+
+        .option:focus-visible {
+            outline: 3px solid var(--red-pen);
+            outline-offset: 2px;
+        }
+
+        .option .tag {
+            font-family: var(--mono);
+            font-weight: 600;
+            color: var(--ink-soft);
+        }
+
+        .option:disabled {
+            cursor: default;
+            opacity: 1;
+        }
+
+        .option.is-correct {
+            border-color: var(--green-ok);
+            background: var(--green-ok-wash);
+            box-shadow: 0 0 0 2px var(--green-ok) inset;
+        }
+
+        .option.is-wrong {
+            border-color: var(--red-pen);
+            background: var(--red-pen-wash);
+        }
+
+        .option.is-wrong .opt-label {
+            text-decoration: line-through;
+            text-decoration-color: var(--red-pen);
+            text-decoration-thickness: 2px;
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .badge svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 14px;
+            background: rgba(182, 38, 44, 0.06);
+            border-left: 3px solid var(--red-pen);
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--ink-soft);
+            font-style: italic;
+        }
+
+        .explanation .why-label {
+            font-family: var(--mono);
+            font-style: normal;
+            font-weight: 600;
+            color: var(--red-pen);
+            letter-spacing: 0.08em;
+            font-size: 11px;
+            margin-right: 6px;
+        }
+
+        #nextBtn {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .results-head {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .results-head h2 {
+            font-family: var(--serif-display);
+            font-size: clamp(32px, 9vw, 44px);
+            margin: 0;
+            color: var(--ink);
+        }
+
+        .score-big {
+            font-family: var(--mono);
+            font-size: clamp(40px, 13vw, 56px);
+            font-weight: 600;
+            text-align: center;
+            color: var(--ink);
+            margin: 6px 0 2px;
+        }
+
+        .score-pct {
+            text-align: center;
+            font-family: var(--mono);
+            color: var(--ink-soft);
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+
+        .tally-final {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .recap {
+            margin-top: 18px;
+            border-top: 1px dashed var(--paper-line);
+            padding-top: 12px;
+        }
+
+        .recap details {
+            border-bottom: 1px dashed var(--paper-line);
+            padding: 10px 2px;
+        }
+
+        .recap summary {
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        .recap summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .recap summary .qnum {
+            color: var(--ink-soft);
+        }
+
+        .recap summary .icon {
+            width: 16px;
+            height: 16px;
+            flex: none;
+        }
+
+        .recap summary .preview {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .recap .recap-body {
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            padding: 8px 0 2px 26px;
+            line-height: 1.5;
+        }
+
+        .recap .recap-body b {
+            color: var(--ink);
+        }
+
+        footer.note {
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--chalk-dim);
+            margin-top: 30px;
+            letter-spacing: 0.05em;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        @media (max-width:420px) {
+            .actions-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <div class="brand"><span>ICAR <span class="mark">→</span> Atlas</span><span id="brandRight"></span></div>
+
+        <div class="hero" id="heroBlock">
+            <h1>Where's HQ?</h1>
+            <svg class="underline" viewBox="0 0 220 14" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M2 9 C 40 2, 70 13, 110 7 S 180 1, 218 8" fill="none" stroke="#E8C44D" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            <p>Practice matching every ICAR institute to its headquarters — five location options each round.</p>
+        </div>
+
+        <!-- SETUP -->
+        <section id="setup-screen">
+            <div class="card">
+                <p class="dataset-note" id="datasetNote"></p>
+                <label for="numQuestions">Questions this round</label>
+                <div class="control">
+                    <input type="range" id="numQuestions" min="5" max="30" value="15" step="1">
+                    <div class="value"><span id="numQuestionsVal">15</span> questions</div>
+                </div>
+                <button class="btn btn-primary" id="generateBtn">Start quiz →</button>
+            </div>
+        </section>
+
+        <!-- QUIZ -->
+        <section id="quiz-screen">
+            <div class="quiz-topbar">
+                <span class="progress" id="progressText">Q 1/15</span>
+                <span class="tally" id="tallyLive" aria-label="Score so far"></span>
+            </div>
+            <div class="card">
+                <p class="question-eyebrow">Where is this institute headquartered?</p>
+                <p class="question-text" id="questionText"></p>
+                <ul class="options" id="optionsList"></ul>
+                <div class="explanation" id="explanation" aria-live="polite">
+                    <span class="why-label">HQ</span><span id="explanationText"></span>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="nextBtn" disabled>Next question →</button>
+        </section>
+
+        <!-- RESULTS -->
+        <section id="results-screen">
+            <div class="card flat">
+                <div class="results-head">
+                    <h2>Report card</h2>
+                </div>
+                <div class="score-big" id="scoreBig">0/0</div>
+                <div class="score-pct" id="scorePct">0%</div>
+                <div class="tally-final" id="tallyFinal"></div>
+                <div class="recap" id="recapList"></div>
+            </div>
+            <div class="actions-row">
+                <button class="btn btn-ghost" id="regenerateBtn">New round</button>
+                <button class="btn btn-ghost" id="startOverBtn">Change settings</button>
+            </div>
+        </section>
+
+        <footer class="note">Locations sourced from the ICAR directory text you provided.</footer>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ---------- Static dataset ----------
+  const INSTITUTES = [
+  ["All India Network Project on Underutilised Crops","AINP","New Delhi"],
+  ["All India Network Project on Tobacco","AINP","Rajahmundry, Andhra Pradesh"],
+  ["All India Network Project on Soil Arthropod Pests","AINP","Durgapura, Rajasthan"],
+  ["Network Project on Agricultural Acarology","NP","Bengaluru, Karnataka"],
+  ["Network Project on Economic Ornithology","NP","Hyderabad, Telangana"],
+  ["All India Network Project on Rodent Control","AINP","Jodhpur, Rajasthan"],
+  ["All India Network Project on Jute & Allied Fibres","AINP","Barrackpore, West Bengal"],
+  ["Network Project on Improvement of Onion & Garlic","NP","Pune, Maharashtra"],
+  ["Network Project on Bio-fertilizers","NP","Bhopal, Madhya Pradesh"],
+  ["Network Project on Harvest & Post-Harvest and Value Addition to Natural Resins & Gums","NP","Ranchi, Jharkhand"],
+  ["Network Project on Animal Genetic Resources","NP","Karnal, Haryana"],
+  ["Network Project on R&D Support for Process Upgradation of Indigenous Milk Products for Industrial Application","NP","Karnal, Haryana"],
+  ["Network Programme on Sheep Improvement","NP","Avikanagar, Rajasthan"],
+  ["Network Project on Buffalo Improvement","NP","Hisar, Haryana"],
+  ["Network Project on Gastrointestinal Parasitism","NP","Izatnagar, Uttar Pradesh"],
+  ["Network Project on Haemorrhagic Septicaemia","NP","Izatnagar, Uttar Pradesh"],
+  ["Network Programme on Bluetongue Disease","NP","Izatnagar, Uttar Pradesh"],
+  ["Network Project on Conservation of Lac Insect Genetic Resources","NP","Ranchi, Jharkhand"],
+  ["Network Project on Agricultural Bioinformatics and Computational Biology","NP","New Delhi"]
+].map(([name, abbr, location]) => ({ name, abbr, location }));
+
+const UNIQUE_LOCATIONS = [...new Set(INSTITUTES.map(i => i.location))];
+
+            // ---------- State ----------
+            const state = {
+                numQuestions: 15,
+                quiz: [],
+                currentIndex: 0,
+                score: 0,
+                answered: false,
+                answers: []
+            };
+
+            // ---------- DOM ----------
+            const el = id => document.getElementById(id);
+            const setupScreen = el('setup-screen');
+            const quizScreen = el('quiz-screen');
+            const resultsScreen = el('results-screen');
+            const heroBlock = el('heroBlock');
+            const datasetNote = el('datasetNote');
+            const numQuestionsInput = el('numQuestions');
+            const numQuestionsVal = el('numQuestionsVal');
+            const generateBtn = el('generateBtn');
+            const progressText = el('progressText');
+            const tallyLive = el('tallyLive');
+            const questionText = el('questionText');
+            const optionsList = el('optionsList');
+            const explanation = el('explanation');
+            const explanationText = el('explanationText');
+            const nextBtn = el('nextBtn');
+            const scoreBig = el('scoreBig');
+            const scorePct = el('scorePct');
+            const tallyFinal = el('tallyFinal');
+            const recapList = el('recapList');
+            const regenerateBtn = el('regenerateBtn');
+            const startOverBtn = el('startOverBtn');
+
+            datasetNote.textContent = `${INSTITUTES.length} institutes loaded from your list.`;
+            numQuestionsInput.max = String(Math.min(40, INSTITUTES.length));
+
+            // ---------- Icons ----------
+            const ICON_CHECK = '<svg viewBox="0 0 20 20" fill="none"><path d="M3 10.5 L8 15 L17 4" stroke="var(--green-ok)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            const ICON_CROSS = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 4 L16 16 M16 4 L4 16" stroke="var(--red-pen)" stroke-width="2.6" stroke-linecap="round"/></svg>';
+
+            // ---------- Tally marks ----------
+            function tallyGroupSVG(count) {
+                const w = count === 5 ? 26 : count * 5 + 3;
+                let lines = '';
+                const positions = [3, 8, 13, 18];
+                for (let i = 0; i < Math.min(count, 4); i++) {
+                    lines += `<line x1="${positions[i]}" y1="2" x2="${positions[i]}" y2="18" stroke="var(--red-pen)" stroke-width="2" stroke-linecap="round"/>`;
+                }
+                if (count === 5) {
+                    lines += `<line x1="1" y1="17" x2="21" y2="2" stroke="var(--red-pen)" stroke-width="2" stroke-linecap="round"/>`;
+                }
+                return `<svg width="${w}" height="20" viewBox="0 0 ${w} 20" aria-hidden="true">${lines}</svg>`;
+            }
+
+            function renderTally(container, n) {
+                let html = '';
+                let remaining = n;
+                while (remaining > 0) {
+                    const take = Math.min(5, remaining);
+                    html += tallyGroupSVG(take);
+                    remaining -= take;
+                }
+                container.innerHTML = html || '<span style="font-family:var(--mono);font-size:12px;color:var(--chalk-dim)">0</span>';
+            }
+
+            // ---------- Helpers ----------
+            function shuffle(arr) {
+                const a = arr.slice();
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            }
+
+            function buildQuiz(n) {
+                const picked = shuffle(INSTITUTES).slice(0, n);
+                return picked.map(inst => {
+                    const distractorPool = shuffle(UNIQUE_LOCATIONS.filter(loc => loc !== inst.location)).slice(0, 4);
+                    const options = shuffle([inst.location, ...distractorPool]);
+                    return {
+                        name: inst.name,
+                        abbr: inst.abbr,
+                        correctLocation: inst.location,
+                        options,
+                        correctIndex: options.indexOf(inst.location)
+                    };
+                });
+            }
+
+            function escapeHTML(str) {
+                const d = document.createElement('div');
+                d.textContent = str;
+                return d.innerHTML;
+            }
+
+            // ---------- Screens ----------
+            function showScreen(name) {
+                setupScreen.style.display = name === 'setup' ? 'block' : 'none';
+                quizScreen.style.display = name === 'quiz' ? 'block' : 'none';
+                resultsScreen.style.display = name === 'results' ? 'block' : 'none';
+                heroBlock.style.display = name === 'setup' ? 'block' : 'none';
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+
+            numQuestionsInput.addEventListener('input', () => {
+                numQuestionsVal.textContent = numQuestionsInput.value;
+            });
+
+            function startQuiz() {
+                state.numQuestions = parseInt(numQuestionsInput.value, 10);
+                state.quiz = buildQuiz(state.numQuestions);
+                state.currentIndex = 0;
+                state.score = 0;
+                state.answers = [];
+                showScreen('quiz');
+                renderQuestion();
+            }
+
+            function renderQuestion() {
+                state.answered = false;
+                const q = state.quiz[state.currentIndex];
+                progressText.textContent = `Q ${state.currentIndex + 1}/${state.quiz.length}`;
+                renderTally(tallyLive, state.score);
+                questionText.innerHTML = `${escapeHTML(q.name)} <span class="abbr">(${escapeHTML(q.abbr)})</span>`;
+                explanation.style.display = 'none';
+                explanationText.textContent = '';
+                nextBtn.disabled = true;
+                nextBtn.textContent = state.currentIndex === state.quiz.length - 1 ? 'See results →' : 'Next question →';
+
+                const letters = ['A', 'B', 'C', 'D', 'E'];
+                optionsList.innerHTML = '';
+                q.options.forEach((opt, idx) => {
+                    const li = document.createElement('li');
+                    const btn = document.createElement('button');
+                    btn.className = 'option';
+                    btn.type = 'button';
+                    btn.innerHTML = `<span class="tag">${letters[idx]}.</span><span class="opt-label">${escapeHTML(opt)}</span><span class="badge" aria-hidden="true"></span>`;
+                    btn.addEventListener('click', () => selectOption(idx));
+                    li.appendChild(btn);
+                    optionsList.appendChild(li);
+                });
+            }
+
+            function selectOption(idx) {
+                if (state.answered) return;
+                state.answered = true;
+                const q = state.quiz[state.currentIndex];
+                const correct = idx === q.correctIndex;
+                if (correct) state.score++;
+                state.answers.push({
+                    selectedIndex: idx,
+                    correct
+                });
+
+                const optionButtons = optionsList.querySelectorAll('.option');
+                optionButtons.forEach((btn, i) => {
+                    btn.disabled = true;
+                    const badge = btn.querySelector('.badge');
+                    if (i === q.correctIndex) {
+                        btn.classList.add('is-correct');
+                        badge.innerHTML = ICON_CHECK;
+                    } else if (i === idx) {
+                        btn.classList.add('is-wrong');
+                        badge.innerHTML = ICON_CROSS;
+                    }
+                });
+
+                explanationText.textContent = `${q.name} (${q.abbr}) is headquartered in ${q.correctLocation}.`;
+                explanation.style.display = 'block';
+                renderTally(tallyLive, state.score);
+                nextBtn.disabled = false;
+            }
+
+            function nextQuestion() {
+                state.currentIndex++;
+                if (state.currentIndex >= state.quiz.length) {
+                    showResults();
+                } else {
+                    renderQuestion();
+                }
+            }
+
+            function showResults() {
+                showScreen('results');
+                const total = state.quiz.length;
+                scoreBig.textContent = `${state.score}/${total}`;
+                scorePct.textContent = `${Math.round((state.score / total) * 100)}% correct`;
+                renderTally(tallyFinal, state.score);
+
+                recapList.innerHTML = '';
+                state.quiz.forEach((q, i) => {
+                    const ans = state.answers[i];
+                    const details = document.createElement('details');
+                    const summary = document.createElement('summary');
+                    const icon = ans.correct ? ICON_CHECK : ICON_CROSS;
+                    const preview = `${q.name} (${q.abbr})`;
+                    const previewShort = preview.length > 46 ? preview.slice(0, 46) + '…' : preview;
+                    summary.innerHTML = `<span class="qnum">Q${i+1}</span><span class="icon">${icon}</span><span class="preview">${escapeHTML(previewShort)}</span>`;
+
+                    const body = document.createElement('div');
+                    body.className = 'recap-body';
+                    const letters = ['A', 'B', 'C', 'D', 'E'];
+                    const yourAns = `${letters[ans.selectedIndex]}. ${q.options[ans.selectedIndex]}`;
+                    const correctAns = `${letters[q.correctIndex]}. ${q.options[q.correctIndex]}`;
+                    body.innerHTML = `<div><b>Your answer:</b> ${escapeHTML(yourAns)}</div>` +
+                        (ans.correct ? '' : `<div><b>Correct answer:</b> ${escapeHTML(correctAns)}</div>`);
+
+                    details.appendChild(summary);
+                    details.appendChild(body);
+                    recapList.appendChild(details);
+                });
+            }
+
+            function changeSettings() {
+                showScreen('setup');
+            }
+
+            generateBtn.addEventListener('click', startQuiz);
+            nextBtn.addEventListener('click', nextQuestion);
+            regenerateBtn.addEventListener('click', startQuiz);
+            startOverBtn.addEventListener('click', changeSettings);
+
+            showScreen('setup');
+        })();
+    </script>
+</body>
+
+</html>
